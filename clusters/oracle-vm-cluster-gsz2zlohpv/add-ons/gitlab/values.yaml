@@ -1,0 +1,553 @@
+certmanager:
+  install: false
+  installCRDs: false
+gitlab:
+  gitlab-shell:
+    enabled: true
+    service:
+      type: ClusterIP
+  toolbox:
+    antiAffinityLabels:
+      matchLabels:
+        app: gitaly
+    backups:
+      objectStorage:
+        config:
+          key: config
+          secret: minio-s3-secret
+    persistence:
+      accessMode: ReadWriteOnce
+      enabled: true
+      size: 50Gi
+    replicas: 1
+  webservice:
+    ingress:
+      enabled: false
+    replicaCount: 1
+sidekiq:
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1G
+gitlab-runner:
+  install: false
+  rbac:
+    create: true
+  runners:
+    config: |
+      [[runners]]
+        [runners.kubernetes]
+        image = "ubuntu:22.04"
+        {{- if .Values.global.minio.enabled }}
+        [runners.cache]
+          Type = "s3"
+          Path = "gitlab-runner"
+          Shared = true
+          [runners.cache.s3]
+            ServerAddress = {{ include "gitlab-runner.cache-tpl.s3ServerAddress" . }}
+            BucketName = "runner-cache"
+            BucketLocation = "us-east-1"
+            Insecure = false
+        {{ end }}
+    locked: false
+    secret: nonempty
+gitlab-zoekt:
+  gateway:
+    basicAuth:
+      enabled: true
+      secretName: '{{ include "gitlab.zoekt.gateway.basicAuth.secretName" $ }}'
+  install: false
+global:
+  affinity:
+    podAntiAffinity:
+      topologyKey: kubernetes.io/hostname
+  antiAffinity: soft
+  appConfig:
+    applicationSettingsCacheSeconds: 60
+    artifacts:
+      bucket: gitlab-artifacts
+      connection: {}
+      enabled: true
+      proxy_download: true
+    backups:
+      bucket: gitlab-backups
+      tmpBucket: tmp
+    ciSecureFiles:
+      bucket: gitlab-ci-secure-files
+      connection: {}
+      enabled: false
+    contentSecurityPolicy:
+      enabled: false
+      report_only: true
+    cron_jobs: {}
+    defaultProjectsFeatures:
+      builds: true
+      issues: true
+      mergeRequests: true
+      snippets: true
+      wiki: true
+    defaultTheme: null
+    dependencyProxy:
+      bucket: gitlab-dependency-proxy
+      connection: {}
+      enabled: false
+      proxy_download: true
+    duoAuth:
+      enabled: false
+    enableImpersonation: null
+    enableSeatLink: true
+    enableUsagePing: true
+    externalDiffs:
+      bucket: gitlab-mr-diffs
+      connection: {}
+      enabled: false
+      proxy_download: true
+      when: null
+    extra:
+      bizible: null
+      googleAnalyticsId: null
+      googleTagManagerNonceId: null
+      matomoDisableCookies: null
+      matomoSiteId: null
+      matomoUrl: null
+      oneTrustId: null
+    gitlab_docs:
+      enabled: false
+      host: ""
+    gitlab_kas: {}
+    graphQlTimeout: null
+    gravatar:
+      plainUrl: null
+      sslUrl: null
+    incomingEmail:
+      address: ""
+      authToken: {}
+      clientSecret:
+        key: secret
+      deleteAfterDelivery: true
+      deliveryMethod: webhook
+      enabled: false
+      expungeDeleted: false
+      host: imap.gmail.com
+      idleTimeout: 60
+      inboxMethod: imap
+      logger:
+        logPath: /dev/stdout
+      mailbox: inbox
+      password:
+        key: password
+        secret: ""
+      pollInterval: 60
+      port: 993
+      ssl: true
+      startTls: false
+      user: ""
+    initialDefaults: {}
+    issueClosingPattern: null
+    kerberos:
+      dedicatedPort:
+        enabled: false
+        https: true
+        port: 8443
+      enabled: false
+      keytab:
+        key: keytab
+      krb5Config: ""
+      servicePrincipalName: ""
+      simpleLdapLinkingAllowedRealms: []
+    ldap:
+      preventSignin: false
+      servers: {}
+    lfs:
+      bucket: git-lfs
+      connection: {}
+      enabled: true
+      proxy_download: true
+    maxRequestDurationSeconds: null
+    microsoft_graph_mailer:
+      azure_ad_endpoint: https://login.microsoftonline.com
+      client_id: ""
+      client_secret:
+        key: secret
+        secret: ""
+      enabled: false
+      graph_endpoint: https://graph.microsoft.com
+      tenant: ""
+      user_id: ""
+    object_store:
+      connection: {}
+      enabled: false
+      proxy_download: true
+      storage_options: {}
+    omniauth:
+      allowBypassTwoFactor: []
+      allowSingleSignOn:
+      - saml
+      autoLinkLdapUser: false
+      autoLinkSamlUser: false
+      autoLinkUser: []
+      autoSignInWithProvider: null
+      blockAutoCreatedUsers: false
+      enabled: false
+      externalProviders: []
+      syncProfileAttributes:
+      - email
+      syncProfileFromProvider: []
+    packages:
+      bucket: gitlab-packages
+      connection: {}
+      enabled: true
+      proxy_download: true
+    sentry:
+      clientside_dsn: null
+      dsn: null
+      enabled: false
+      environment: null
+    serviceDeskEmail:
+      address: ""
+      authToken: {}
+      clientSecret:
+        key: secret
+      deleteAfterDelivery: true
+      deliveryMethod: webhook
+      enabled: false
+      expungeDeleted: false
+      host: imap.gmail.com
+      idleTimeout: 60
+      inboxMethod: imap
+      logger:
+        logPath: /dev/stdout
+      mailbox: inbox
+      password:
+        key: password
+        secret: ""
+      pollInterval: 60
+      port: 993
+      ssl: true
+      startTls: false
+      user: ""
+    sidekiq:
+      routingRules: []
+    smartcard:
+      CASecret: null
+      clientCertificateRequiredHost: null
+      enabled: false
+      requiredForGitAccess: false
+      sanExtensions: false
+    suggested_reviewers: {}
+    terraformState:
+      bucket: gitlab-terraform-state
+      connection: {}
+      enabled: false
+    uploads:
+      bucket: gitlab-uploads
+      connection: {}
+      enabled: true
+      proxy_download: true
+    usernameChangingEnabled: true
+    webhookTimeout: null
+  application:
+    allowClusterRoles: true
+    create: false
+    links: []
+  batch:
+    cronJob:
+      apiVersion: ""
+  certificates:
+    customCAs: []
+    image:
+      repository: registry.gitlab.com/gitlab-org/build/cng/certificates
+  deployment:
+    annotations: {}
+  edition: ee
+  email:
+    display_name: GitLab
+    from: ""
+    reply_to: ""
+    smime:
+      certName: tls.crt
+      enabled: false
+      keyName: tls.key
+      secretName: ""
+    subject_suffix: ""
+  extraEnv: {}
+  extraEnvFrom: {}
+  geo:
+    enabled: false
+    nodeName: null
+    psql:
+      password: {}
+    registry:
+      replication:
+        enabled: false
+        primaryApiUrl: null
+    role: primary
+  gitaly:
+    authToken: {}
+    enabled: true
+    external: []
+    internal:
+      names:
+      - default
+    license: {}
+    service:
+      externalPort: 8075
+      internalPort: 8075
+      name: gitaly
+      tls:
+        externalPort: 8076
+        internalPort: 8076
+      type: ClusterIP
+    tls:
+      enabled: false
+  gitlabBase:
+    image:
+      repository: registry.gitlab.com/gitlab-org/build/cng/gitlab-base
+  gitlabVersion: 17.10.6
+  hpa:
+    apiVersion: ""
+  image: {}
+  ingress:
+    annotations: {}
+    apiVersion: networking.k8s.io/v1
+    class: nginx
+    configureCertmanager: false
+    enabled: true
+    provider: nginx
+  initialRootPassword: {}
+  kas:
+    enabled: true
+    service:
+      apiExternalPort: 8153
+    tls:
+      enabled: false
+      verify: true
+  keda:
+    enabled: false
+  kubectl:
+    image:
+      repository: registry.gitlab.com/gitlab-org/build/cng/kubectl
+    securityContext:
+      fsGroup: 65534
+      runAsUser: 65534
+  minio:
+    credentials: {}
+    enabled: true
+  monitoring:
+    enabled: false
+  oauth:
+    gitlab-pages: {}
+  pages:
+    accessControl: true
+    apiSecret: {}
+    artifactsServer: true
+    authSecret: {}
+    enabled: true
+    externalHttp: []
+    externalHttps: []
+    host: null
+    https: null
+    localStore:
+      enabled: false
+    objectStore:
+      bucket: gitlab-pages
+      connection: {}
+      enabled: true
+    path: null
+    port: null
+  pdb:
+    apiVersion: ""
+  pod:
+    labels: {}
+  praefect:
+    authToken: {}
+    autoMigrate: true
+    dbSecret: {}
+    enabled: false
+    ntpHost: pool.ntp.org
+    psql:
+      sslMode: disable
+    replaceInternalGitaly: true
+    service:
+      externalPort: 8075
+      internalPort: 8075
+      name: praefect
+      tls:
+        externalPort: 8076
+        internalPort: 8076
+      type: ClusterIP
+    tls:
+      enabled: false
+    virtualStorages:
+    - gitalyReplicas: 3
+      maxUnavailable: 1
+      name: default
+  priorityClassName: ""
+  psql:
+    connectTimeout: null
+    keepalives: null
+    keepalivesCount: null
+    keepalivesIdle: null
+    keepalivesInterval: null
+    password: {}
+    tcpUserTimeout: null
+  rails:
+    bootsnap:
+      enabled: true
+  railsSecrets: {}
+  redis:
+    auth:
+      enabled: true
+  registry:
+    api:
+      port: 5000
+      protocol: http
+      serviceName: registry
+    bucket: registry
+    certificate: {}
+    enabled: false
+    host: null
+    httpSecret: {}
+    notificationSecret: {}
+    notifications: {}
+    redis:
+      cache:
+        password: {}
+    tls:
+      enabled: false
+    tokenIssuer: gitlab-issuer
+  runner:
+    registrationToken: {}
+  service:
+    annotations: {}
+    labels: {}
+  serviceAccount:
+    annotations: {}
+    create: true
+    enabled: false
+  shell:
+    authToken: {}
+    hostKeys: {}
+    tcp:
+      proxyProtocol: false
+  smtp:
+    enabled: false
+  spamcheck:
+    enabled: false
+  time_zone: UTC
+  tracing:
+    connection:
+      string: ""
+    urlTemplate: ""
+  webservice:
+    workerTimeout: 60
+  workhorse:
+    serviceName: webservice-default
+    tls:
+      enabled: false
+  zoekt:
+    gateway:
+      basicAuth: {}
+haproxy:
+  install: false
+minio:
+  ingress:
+    enabled: false
+  persistence:
+    accessMode: ReadWriteOnce
+    enabled: true
+    size: 50Gi
+  replicaCount: 1
+nginx-ingress:
+  enabled: false
+nginx-ingress-geo:
+  enabled: false
+postgresql:
+  auth:
+    existingSecret: '{{ include "gitlab.psql.password.secret" . }}'
+    password: bogus-satisfy-upgrade
+    postgresPassword: bogus-satisfy-upgrade
+    secretKeys:
+      adminPasswordKey: postgresql-postgres-password
+      userPasswordKey: '{{ include "gitlab.psql.password.key" $ }}'
+    usePasswordFiles: false
+  image:
+    tag: 14.8.0
+  install: true
+  metrics:
+    enabled: true
+    service:
+      annotations:
+        gitlab.com/prometheus_port: "9187"
+        gitlab.com/prometheus_scrape: "true"
+        prometheus.io/port: "9187"
+        prometheus.io/scrape: "true"
+  primary:
+    extraVolumeMounts:
+    - mountPath: /docker-entrypoint-preinitdb.d/init_revision.sh
+      name: custom-init-scripts
+      subPath: init_revision.sh
+    initdb:
+      scriptsConfigMap: '{{ include "gitlab.psql.initdbscripts" $}}'
+    podAnnotations:
+      postgresql.gitlab/init-revision: "1"
+prometheus:
+  install: false
+redis:
+  architecture: standalone
+  auth:
+    existingSecret: gitlab-redis-secret
+    existingSecretKey: redis-password
+    usePasswordFiles: true
+  cluster:
+    enabled: true
+  install: true
+  metrics:
+    enabled: true
+registry:
+  enabled: false
+service:
+  ssh:
+    enabled: true
+    nodePort: 32222
+  type: LoadBalancer
+shared-secrets:
+  annotations: {}
+  enabled: true
+  env: production
+  podLabels: {}
+  rbac:
+    create: true
+  resources:
+    requests:
+      cpu: 50m
+  securityContext:
+    fsGroup: 65534
+    runAsUser: 65534
+  selfsign:
+    caSubject: GitLab Helm Chart
+    expiry: 3650d
+    image:
+      repository: registry.gitlab.com/gitlab-org/build/cng/cfssl-self-sign
+    keyAlgorithm: rsa
+    keySize: "4096"
+  serviceAccount:
+    create: true
+    enabled: true
+    name: null
+  tolerations: []
+traefik:
+  install: false
+upgradeCheck:
+  annotations: {}
+  configMapAnnotations: {}
+  enabled: false
+  image: {}
+  priorityClassName: ""
+  resources:
+    requests:
+      cpu: 50m
+  securityContext:
+    fsGroup: 65534
+    runAsUser: 65534
+  tolerations: []
