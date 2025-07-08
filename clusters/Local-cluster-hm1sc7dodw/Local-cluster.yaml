@@ -8,4 +8,8 @@ spec:
     credential_name: User-shivaswaroop12
     branch: main
     repository: shivaswaroop12/ankra-test
-  stacks: []
+  stacks:
+  - name: wordpress
+    description: trying out wordpress on my local cluster
+    manifests: []
+    addons: []
