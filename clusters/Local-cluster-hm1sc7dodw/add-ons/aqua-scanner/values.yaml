@@ -1,0 +1,77 @@
+# values.yaml for Aqua Scanner on Minikube
+
+# Image configuration for local development
+image:
+  repository: aqua-scanner
+  tag: latest
+  pullPolicy: IfNotPresent
+  # For local Docker registry (Minikube)
+  # repository: localhost:5000/aqua-scanner
+
+# Minikube resource constraints
+resources:
+  requests:
+    memory: 512Mi
+    cpu: 500m
+  limits:
+    memory: 1Gi
+    cpu: 1
+
+# Persistence configuration
+persistence:
+  enabled: true
+  storageClass: "standard"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+# Service configuration for local access
+server:
+  serviceName: aqua-scanner-svc
+  port: 8080
+  service:
+    type: LoadBalancer
+    loadBalancerIP: ""  # Let Minikube assign IP
+
+# Security context for local development
+securityContext:
+  runAsNonRoot: true
+  readOnlyRootFilesystem: false
+
+# Environment-specific overrides
+env:
+  - name: DISABLE_TELEMETRY
+    value: "true"
+  - name: LOG_LEVEL
+    value: "debug"
+
+# Local Docker socket access
+docker:
+  socket:
+    path: "/var/run/docker.sock"
+    # For Minikube's Docker socket
+    # path: "/host/var/run/docker.sock"
+
+# Liveness/Readiness probes
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 20
+  periodSeconds: 5
+
+# Minikube-specific image pull settings
+imagePullSecrets: []
+repositoryUriPrefix: "localhost:5000"  # For local registry
+
+# Replica count for local development
+replicaCount: 1
+
+# Service account for local cluster
+serviceAccount: default
