@@ -75,3 +75,8 @@ replicaCount: 1
 
 # Service account for local cluster
 serviceAccount: default
+
+# 🔑 Authentication credentials
+user:
+  username: "scanner-user"  # Required: Username for Scanner role
+  password: "your-secure-password"  # Required: Password for Scanner role
