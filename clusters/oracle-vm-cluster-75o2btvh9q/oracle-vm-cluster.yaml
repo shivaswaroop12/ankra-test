@@ -9,3 +9,15 @@ spec:
     credential_name: User-shivaswaroop12
     branch: main
     repository: shivaswaroop12/ankra-test
+  stacks:
+  - name: wordpress
+    description: Local wordpress
+    addons:
+    - name: wordpress
+      chart_name: wordpress
+      chart_version: 24.2.9
+      repository_url: https://charts.bitnami.com/bitnami
+      namespace: wordpress
+      configuration_type: standalone
+      configuration:
+        from_file: add-ons/wordpress/values.yaml

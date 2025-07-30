@@ -1,0 +1,101 @@
+# values.yaml for WordPress Development Environment
+
+# Global parameters
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  defaultStorageClass: "standard"
+  security:
+    allowInsecureImages: true
+
+# Common configuration
+kubeVersion: ""
+nameOverride: ""
+fullnameOverride: ""
+commonLabels: {}
+commonAnnotations: {}
+clusterDomain: cluster.local
+extraDeploy: []
+usePasswordFiles: true
+diagnosticMode:
+  enabled: false
+
+# WordPress Image
+image:
+  registry: docker.io
+  repository: bitnami/wordpress
+  tag: latest
+  digest: ""
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+  debug: true
+
+# WordPress Configuration
+wordpressUsername: admin
+wordpressPassword: devpassword123
+wordpressEmail: dev@example.com
+wordpressBlogName: Dev Blog
+persistence:
+  enabled: true
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 2Gi
+
+# Deployment Settings
+replicaCount: 1
+updateStrategy:
+  type: RollingUpdate
+schedulerName: ""
+terminationGracePeriodSeconds: ""
+topologySpreadConstraints: []
+priorityClassName: ""
+automountServiceAccountToken: false
+
+# Resource Allocation
+resourcesPreset: "nano"
+resources: {}
+
+# Service Configuration
+service:
+  type: ClusterIP
+  ports:
+    http: 80
+    https: 443
+  clusterIP: ""
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+
+# Database Configuration
+mariadb:
+  enabled: true
+  architecture: standalone
+  auth:
+    rootPassword: rootpassword
+    database: bitnami_wordpress
+    username: bn_wordpress
+    password: dbpassword
+  primary:
+    persistence:
+      enabled: true
+      storageClass: ""
+      accessModes:
+        - ReadWriteOnce
+      size: 2Gi
+
+# Disable Production Features
+autoscaling:
+  enabled: false
+pdb:
+  create: false
+metrics:
+  enabled: false
+networkPolicy:
+  enabled: false
+memcached:
+  enabled: false
+
+# Development-Specific Overrides
+allowEmptyPassword: true
+wordpressSkipInstall: false
+overrideDatabaseSettings: true
