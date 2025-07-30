@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ImportCluster
+metadata:
+  name: oracle-vm-cluster
+  description: Your imported cluster
+spec:
+  git_repository:
+    provider: github
+    credential_name: User-shivaswaroop12
+    branch: main
+    repository: shivaswaroop12/ankra-test
